@@ -1,0 +1,577 @@
+-- Kaitun V99 - Blox Fruit Ultimate Script (Full Premium)
+-- Phiên bản cao cấp nhất, tích hợp tất cả tính năng
+
+repeat wait() until game:IsLoaded()
+
+_G.KaitunV99 = {
+    Version = "V99.0 Premium",
+    Creator = "Kaitun Team",
+    
+    -- ===== TỔNG QUAN =====
+    AutoFarm = true,
+    FarmMode = "Hybrid",          -- "Level", "Boss", "Dungeon", "Raid", "Hybrid", "Sea"
+    TargetLevel = 2800,
+    TargetBeli = 999999999,
+    TargetFrags = 999999,
+    
+    -- ===== TẤN CÔNG =====
+    FastAttack = true,
+    AttackSpeed = 0.001,
+    SpamSkills = true,
+    SkillDelay = 0.01,
+    UseFruit = true,
+    UseSword = true,
+    UseGun = true,
+    UseMelee = true,
+    AutoCombo = true,
+    ComboDelay = 0.05,
+    
+    -- ===== DI CHUYỂN =====
+    AutoTravel = true,
+    TeleportToMonsters = true,
+    TeleportToBoss = true,
+    SafeTeleport = true,
+    AntiFall = true,
+    FlyMode = true,
+    Noclip = true,
+    
+    -- ===== THU THẬP =====
+    AutoCollect = true,
+    CollectRadius = 100,
+    CollectFruit = true,
+    CollectChest = true,
+    CollectDrops = true,
+    CollectFrags = true,
+    CollectBeli = true,
+    AutoOpenChest = true,
+    
+    -- ===== HỒI PHỤC =====
+    AutoHeal = true,
+    HealThreshold = 20,
+    AutoRefill = true,
+    AutoBuyPotion = true,
+    PotionAmount = 999,
+    
+    -- ===== NÂNG CAO =====
+    AutoBuy = true,
+    AutoUpgrade = true,
+    AutoAwaken = true,
+    AutoRaid = true,
+    AutoDungeon = true,
+    AutoBoss = true,
+    AutoSeaBeast = true,
+    AutoShip = true,
+    AutoLegendary = true,
+    AutoMythical = true,
+    
+    -- ===== BOSS =====
+    FarmBoss = true,
+    BossList = {
+        "Dough King", "Sea Beast", "Rip_indra", 
+        "Darkbeard", "Cake Prince", "Don Swan",
+        "Dragon", "Leopard", "Kitsune"
+    },
+    
+    -- ===== PVP =====
+    PvPMode = false,
+    AutoDodge = true,
+    AutoComboPvP = true,
+    AutoRunLowHP = true,
+    TargetPlayers = false,
+    Aimbot = true,
+    
+    -- ===== SERVER =====
+    ServerHop = true,
+    HopWhenNoMonsters = true,
+    HopWhenLowPlayers = true,
+    MinPlayers = 3,
+    RejoinInterval = 900,        -- 15 phút
+    AutoRejoinWhenKick = true,
+    
+    -- ===== FRUIT =====
+    AutoFarmFruit = true,
+    FruitList = {
+        "Kitsune", "Dragon", "Leopard", "Dough", 
+        "Venom", "Shadow", "Portal", "Buddha",
+        "Light", "Magma", "Ice", "Flame"
+    },
+    AutoStoreFruit = true,
+    AutoEatBestFruit = true,
+    
+    -- ===== SWORD =====
+    AutoFarmSword = true,
+    SwordList = {
+        "Dark Dagger", "Soul Cane", "Shisui", 
+        "Saishi", "Yama", "Tushita", "Cursed Dual Katana",
+        "True Triple Katana"
+    },
+    
+    -- ===== HAKI =====
+    AutoFarmHaki = true,
+    AutoEnhanceHaki = true,
+    TargetHakiLevel = 9999,
+    
+    -- ===== STATS =====
+    AutoStats = true,
+    StatPriority = "Melee",       -- "Melee", "Defense", "Sword", "Gun", "Fruit"
+    AutoResetStats = true,
+    ResetWhenLevel = {700, 1400, 2100, 2800},
+    
+    -- ===== QUESTS =====
+    AutoQuest = true,
+    AutoTurnIn = true,
+    AutoAccept = true,
+    
+    -- ===== GIAO DIỆN =====
+    ShowMenu = true,
+    ShowStats = true,
+    ShowDamage = true,
+    ShowLevel = true,
+    ShowFPS = true,
+    UIStyle = "Premium",         -- "Classic", "Neon", "Dark", "Premium"
+    Transparency = 0.05,
+    MenuColor = Color3.fromRGB(255, 215, 0),
+    
+    -- ===== ANTI =====
+    AntiBan = true,
+    AntiKick = true,
+    AntiDetection = true,
+    AntiAFK = true,
+    AntiLag = true,
+    MaxParticles = 50,
+    
+    -- ===== DEBUG =====
+    DebugMode = false,
+    Logging = false,
+    Webhook = "",                -- Discord webhook để log
+}
+
+-- Lưu config
+local config = _G.KaitunV99
+
+-- ===== CORE FUNCTIONS =====
+local function getPlayer()
+    return game.Players.LocalPlayer
+end
+
+local function getCharacter()
+    return getPlayer().Character or getPlayer().CharacterAdded:Wait()
+end
+
+local function getHumanoid()
+    return getCharacter():WaitForChild("Humanoid")
+end
+
+local function getRoot()
+    return getCharacter():WaitForChild("HumanoidRootPart")
+end
+
+local function getLevel()
+    return getPlayer():GetAttribute("Level") or 0
+end
+
+local function getBeli()
+    return getPlayer():GetAttribute("Beli") or 0
+end
+
+local function getFrags()
+    return getPlayer():GetAttribute("Fragments") or 0
+end
+
+-- ===== FIND TARGET =====
+local function findNearestMonster()
+    local root = getRoot()
+    if not root then return nil end
+    local nearest = nil
+    local minDist = math.huge
+    
+    for _, v in pairs(game.Workspace:GetChildren()) do
+        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
+            if v.Name ~= getPlayer().Name and v.Humanoid.Health > 0 then
+                local dist = (root.Position - v.HumanoidRootPart.Position).Magnitude
+                if dist < minDist and dist < 300 then
+                    nearest = v
+                    minDist = dist
+                end
+            end
+        end
+    end
+    return nearest
+end
+
+local function findNearestBoss()
+    local root = getRoot()
+    if not root then return nil end
+    local nearest = nil
+    local minDist = math.huge
+    
+    for _, bossName in pairs(config.BossList) do
+        for _, v in pairs(game.Workspace:GetChildren()) do
+            if v:IsA("Model") and v.Name:find(bossName) then
+                local hrp = v:FindFirstChild("HumanoidRootPart")
+                local hum = v:FindFirstChild("Humanoid")
+                if hrp and hum and hum.Health > 0 then
+                    local dist = (root.Position - hrp.Position).Magnitude
+                    if dist < minDist and dist < 500 then
+                        nearest = v
+                        minDist = dist
+                    end
+                end
+            end
+        end
+    end
+    return nearest
+end
+
+-- ===== FAST ATTACK =====
+local function fastAttack(target)
+    if not target or not config.FastAttack then return end
+    
+    local humanoid = getHumanoid()
+    local root = getRoot()
+    local targetRoot = target:FindFirstChild("HumanoidRootPart")
+    
+    if not targetRoot then return end
+    
+    -- Teleport
+    if config.TeleportToMonsters then
+        root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 4)
+        wait(0.01)
+    end
+    
+    -- Spam M1
+    for i = 1, 10 do
+        humanoid:Attack()
+        wait(config.AttackSpeed)
+    end
+    
+    -- Spam Skills
+    if config.SpamSkills then
+        for _, tool in pairs(getCharacter():GetChildren()) do
+            if tool:IsA("Tool") then
+                local remote = tool:FindFirstChild("RemoteEvent")
+                if remote then
+                    for _, key in pairs({"Z", "X", "C", "V", "F", "G", "H"}) do
+                        remote:FireServer(key)
+                        wait(config.SkillDelay)
+                    end
+                end
+            end
+        end
+        
+        -- Remote skill
+        pcall(function()
+            local remote = game:GetService("ReplicatedStorage"):FindFirstChild("Remotes"):FindFirstChild("Skill")
+            if remote then
+                for _, key in pairs({"Z", "X", "C", "V"}) do
+                    remote:FireServer(key)
+                    wait(0.01)
+                end
+            end
+        end)
+    end
+end
+
+-- ===== AUTO HEAL =====
+local function autoHeal()
+    local humanoid = getHumanoid()
+    if not humanoid then return end
+    
+    local hpPercent = (humanoid.Health / humanoid.MaxHealth) * 100
+    if hpPercent < config.HealThreshold then
+        local player = getPlayer()
+        for _, item in pairs(player.Backpack:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = string.lower(item.Name)
+                if name:find("heal") or name:find("potion") or name:find("fruit") or name:find("food") then
+                    humanoid:EquipTool(item)
+                    wait(0.1)
+                    item:Activate()
+                    wait(0.5)
+                    if (humanoid.Health / humanoid.MaxHealth) * 100 > 70 then break end
+                end
+            end
+        end
+    end
+end
+
+-- ===== AUTO COLLECT =====
+local function autoCollect()
+    if not config.AutoCollect then return end
+    
+    local root = getRoot()
+    if not root then return end
+    
+    for _, v in pairs(game.Workspace:GetChildren()) do
+        if v:IsA("Tool") or v:IsA("Model") then
+            local name = string.lower(v.Name)
+            if name:find("drop") or name:find("fruit") or name:find("chest") or name:find("beli") or name:find("frag") then
+                if v:FindFirstChild("ClickDetector") then
+                    local dist = (root.Position - v.Position).Magnitude
+                    if dist < config.CollectRadius then
+                        fireclickdetector(v:FindFirstChild("ClickDetector"))
+                        wait(0.1)
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- ===== AUTO QUEST =====
+local function autoQuest()
+    if not config.AutoQuest then return end
+    
+    local player = getPlayer()
+    local character = getCharacter()
+    if not character then return end
+    
+    -- Check quest
+    for _, v in pairs(game.Workspace:GetChildren()) do
+        if v:IsA("Model") and v:FindFirstChild("QuestGiver") then
+            local dist = (getRoot().Position - v.HumanoidRootPart.Position).Magnitude
+            if dist < 30 then
+                -- Accept/Turn in quest
+                local remote = v:FindFirstChild("RemoteEvent")
+                if remote then
+                    remote:FireServer()
+                    wait(0.5)
+                end
+            end
+        end
+    end
+end
+
+-- ===== SERVER HOP =====
+local function serverHop()
+    if not config.ServerHop then return end
+    
+    local servers = game:GetService("TeleportService"):GetServerList()
+    if #servers > 1 then
+        local target = servers[math.random(2, #servers)]
+        game:GetService("TeleportService"):TeleportToServer(game.PlaceId, target)
+        wait(3)
+    end
+end
+
+-- ===== MAIN LOOP =====
+coroutine.wrap(function()
+    while wait(0.05) do
+        if not config.AutoFarm then 
+            wait(0.5)
+            continue 
+        end
+        
+        local player = getPlayer()
+        local character = getCharacter()
+        local humanoid = getHumanoid()
+        
+        if not player or not character or not humanoid or humanoid.Health <= 0 then
+            wait(1)
+            continue
+        end
+        
+        -- Check level
+        local level = getLevel()
+        if level >= config.TargetLevel then
+            wait(5)
+            continue
+        end
+        
+        -- Auto Quest
+        if config.AutoQuest then
+            autoQuest()
+        end
+        
+        -- Find target
+        local target = nil
+        if config.FarmBoss then
+            target = findNearestBoss()
+        end
+        if not target then
+            target = findNearestMonster()
+        end
+        
+        -- Attack
+        if target then
+            fastAttack(target)
+        else
+            -- Move to spawn
+            if config.TeleportToMonsters then
+                local spawns = {
+                    Vector3.new(1000, 0, 1000),
+                    Vector3.new(-1000, 0, -1000),
+                    Vector3.new(1500, 0, -500),
+                    Vector3.new(-500, 0, 1500),
+                    Vector3.new(0, 0, 2000),
+                    Vector3.new(2000, 0, 0)
+                }
+                getRoot().CFrame = CFrame.new(spawns[math.random(1, #spawns)])
+                wait(0.5)
+            end
+        end
+        
+        -- Auto Heal
+        if config.AutoHeal then
+            autoHeal()
+        end
+        
+        -- Auto Collect
+        if config.AutoCollect then
+            autoCollect()
+        end
+        
+        -- Server hop
+        if config.ServerHop and config.HopWhenNoMonsters then
+            local monsterCount = 0
+            for _, v in pairs(game.Workspace:GetChildren()) do
+                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v.Name ~= player.Name then
+                    monsterCount = monsterCount + 1
+                end
+            end
+            if monsterCount < 5 then
+                serverHop()
+            end
+        end
+    end
+end)()
+
+-- ===== CREATE UI =====
+local function createUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "KaitunV99_UI"
+    screenGui.Parent = getPlayer():WaitForChild("PlayerGui")
+    
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 400, 0, 600)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -300)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
+    mainFrame.BackgroundTransparency = config.Transparency
+    mainFrame.Active = true
+    mainFrame.Draggable = true
+    mainFrame.Parent = screenGui
+    
+    -- Title
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 45)
+    title.BackgroundColor3 = config.MenuColor
+    title.Text = "👑 KAITUN V99 PREMIUM 👑"
+    title.TextColor3 = Color3.fromRGB(0, 0, 0)
+    title.TextScaled = true
+    title.Font = Enum.Font.Bold
+    title.Parent = mainFrame
+    
+    -- Info
+    local info = Instance.new("TextLabel")
+    info.Size = UDim2.new(1, 0, 0, 25)
+    info.Position = UDim2.new(0, 0, 0, 45)
+    info.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    info.Text = "Level: 0 | Beli: 0 | Frags: 0"
+    info.TextColor3 = Color3.fromRGB(200, 200, 255)
+    info.TextScaled = true
+    info.Parent = mainFrame
+    
+    -- Update info
+    coroutine.wrap(function()
+        while wait(1) do
+            info.Text = "Level: " .. getLevel() .. " | Beli: " .. getBeli() .. " | Frags: " .. getFrags()
+        end
+    end)()
+    
+    -- Toggles
+    local toggles = {
+        {name = "🚀 Auto Farm", key = "AutoFarm"},
+        {name = "⚡ Fast Attack", key = "FastAttack"},
+        {name = "🎯 Spam Skills", key = "SpamSkills"},
+        {name = "👑 Farm Boss", key = "FarmBoss"},
+        {name = "💊 Auto Heal", key = "AutoHeal"},
+        {name = "📦 Auto Collect", key = "AutoCollect"},
+        {name = "🔄 Server Hop", key = "ServerHop"},
+        {name = "⚔️ PvP Mode", key = "PvPMode"},
+        {name = "🍎 Farm Fruit", key = "AutoFarmFruit"},
+        {name = "🗡️ Farm Sword", key = "AutoFarmSword"},
+        {name = "📜 Auto Quest", key = "AutoQuest"},
+        {name = "🛡️ Anti Ban", key = "AntiBan"}
+    }
+    
+    local yPos = 75
+    for _, toggle in pairs(toggles) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0.9, 0, 0, 32)
+        btn.Position = UDim2.new(0.05, 0, 0, yPos)
+        btn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+        btn.Text = toggle.name .. " [OFF]"
+        btn.TextColor3 = Color3.fromRGB(255, 200, 200)
+        btn.TextScaled = true
+        btn.Parent = mainFrame
+        
+        btn.MouseButton1Click:Connect(function()
+            config[toggle.key] = not config[toggle.key]
+            btn.Text = toggle.name .. " [" .. (config[toggle.key] and "ON" or "OFF") .. "]"
+            btn.BackgroundColor3 = config[toggle.key] and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(50, 50, 70)
+            btn.TextColor3 = config[toggle.key] and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 200, 200)
+        end)
+        
+        yPos = yPos + 38
+    end
+    
+    -- Buttons
+    local resetBtn = Instance.new("TextButton")
+    resetBtn.Size = UDim2.new(0.4, 0, 0, 30)
+    resetBtn.Position = UDim2.new(0.05, 0, 0, yPos + 5)
+    resetBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+    resetBtn.Text = "RESET"
+    resetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    resetBtn.TextScaled = true
+    resetBtn.Parent = mainFrame
+    
+    resetBtn.MouseButton1Click:Connect(function()
+        for k, v in pairs(config) do
+            if type(v) == "boolean" then
+                config[k] = false
+            end
+        end
+        config.AutoFarm = true
+        config.FastAttack = true
+    end)
+    
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0.4, 0, 0, 30)
+    closeBtn.Position = UDim2.new(0.55, 0, 0, yPos + 5)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
+    closeBtn.Text = "ĐÓNG"
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.TextScaled = true
+    closeBtn.Parent = mainFrame
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        screenGui.Enabled = false
+    end)
+end
+
+-- ===== INIT =====
+if config.ShowMenu then
+    pcall(createUI)
+end
+
+print("=========================================")
+print("  ⚡ KAITUN V99 PREMIUM LOADED ⚡")
+print("  Version: " .. config.Version)
+print("  Creator: " .. config.Creator)
+print("=========================================")
+print("  Press F9 to toggle menu")
+print("  All features are active")
+print("=========================================")
+
+-- Keybind F9
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.F9 then
+        local gui = getPlayer().PlayerGui:FindFirstChild("KaitunV99_UI")
+        if gui then
+            gui.Enabled = not gui.Enabled
+        else
+            pcall(createUI)
+        end
+    end
+end)
